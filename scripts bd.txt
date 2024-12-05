@@ -1,0 +1,101 @@
+-- Remover tabelas existentes (se houver)
+DROP TABLE IF EXISTS consulta CASCADE; 
+DROP TABLE IF EXISTS medico CASCADE;
+DROP TABLE IF EXISTS paciente CASCADE;
+DROP TABLE IF EXISTS especialidade CASCADE;
+DROP TABLE IF EXISTS recepcionista CASCADE;
+
+-- Criar tabela de Paciente
+CREATE TABLE paciente (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    endereco VARCHAR(255),
+    telefone VARCHAR(15),
+    email VARCHAR(100),
+    data_nascimento DATE NOT NULL
+);
+
+-- Criar tabela de Especialidade
+CREATE TABLE especialidade (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    descricao TEXT
+);
+
+-- Criar tabela de Médico
+CREATE TABLE medico (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    crm VARCHAR(50) NOT NULL,
+    id_especialidade INT REFERENCES especialidade(id) ON DELETE SET NULL,
+    telefone VARCHAR(15)
+);
+
+-- Criar tabela de Consulta
+CREATE TABLE consulta (
+    id SERIAL PRIMARY KEY,
+    data DATE NOT NULL,
+    hora TIME NOT NULL,
+    id_paciente INT REFERENCES paciente(id) ON DELETE CASCADE,
+    id_medico INT REFERENCES medico(id) ON DELETE CASCADE,
+    status VARCHAR(50) CHECK (status IN ('realizada', 'cancelada', 'agendada'))
+);
+
+-- Criar tabela de Recepcionista
+CREATE TABLE recepcionista (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    telefone VARCHAR(15),
+    email VARCHAR(100)
+);
+
+-- Inserir dados na tabela Paciente
+INSERT INTO paciente (nome, endereco, telefone, email, data_nascimento)
+VALUES
+('Lucas Pereira', 'Rua Central, 123', '(11) 99999-8888', 'lucas.pereira@email.com', '1990-07-15'),
+('Mariana Santos', 'Avenida Brasil, 456', '(21) 88888-9999', 'mariana.santos@email.com', '1985-02-20');
+
+-- Inserir dados na tabela Especialidade
+INSERT INTO especialidade (nome, descricao)
+VALUES
+('Cardiologia', 'Especialidade que trata doenças do coração'),
+('Dermatologia', 'Especialidade que trata doenças de pele');
+
+-- Inserir dados na tabela Médico
+INSERT INTO medico (nome, crm, id_especialidade, telefone)
+VALUES
+('Dr. João Almeida', '123456-SP', 1, '(11) 92345-1234'),
+('Dra. Maria Fernanda', '789012-RJ', 2, '(21) 98765-4321');
+
+-- Inserir dados na tabela Consulta
+INSERT INTO consulta (data, hora, id_paciente, id_medico, status)
+VALUES
+('2024-04-10', '09:00', 1, 1, 'Realizada'),
+('2024-04-12', '14:00', 2, 2, 'Agendada');
+
+-- Inserir dados na tabela Recepcionista
+INSERT INTO recepcionista (nome, telefone, email)
+VALUES
+('Paula Souza', '(11) 99988-7777', 'paula.souza@email.com'),
+('Ana Costa', '(21) 98765-4321', 'ana.costa@email.com');
+
+-- Exemplo de consulta para exibir informações combinadas
+SELECT
+    p.nome AS paciente_nome,
+    p.data_nascimento AS paciente_data_nascimento,
+    p.telefone AS paciente_telefone,
+    p.email AS paciente_email,
+    m.nome AS medico_nome,
+    m.crm AS medico_crm,
+    e.nome AS especialidade_nome,
+    c.data AS consulta_data,
+    c.hora AS consulta_hora,
+    c.status AS consulta_status
+FROM
+    paciente p
+LEFT JOIN
+    consulta c ON p.id = c.id_paciente
+LEFT JOIN
+    medico m ON c.id_medico = m.id
+LEFT JOIN
+    especialidade e ON m.id_especialidade = e.id;
